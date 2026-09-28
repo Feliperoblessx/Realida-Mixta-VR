@@ -43,47 +43,48 @@ public class CameraPointerManager : MonoBehaviour
         _gazedAtObject?.SendMessage("OnPointerClickXR", null, SendMessageOptions.DontRequireReceiver);
     }
 
-   public void Update()
-   {
+    public void Update()
+    {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.forward, out hit, _maxDistance))
         {
-           hitPoint = hit.point;
+            hitPoint = hit.point;
 
             if (_gazedAtObject != hit.transform.gameObject)
             {
-                
-                _gazedAtObject?.SendMessage("OnPointerExitXR",  null, SendMessageOptions.DontRequireReceiver);
+                _gazedAtObject?.SendMessage("OnPointerExitXR", null, SendMessageOptions.DontRequireReceiver);
                 _gazedAtObject = hit.transform.gameObject;
                 _gazedAtObject.SendMessage("OnPointerEnterXR", null, SendMessageOptions.DontRequireReceiver);
-                GazeManager.Instance.StartGazeSelection();
+
+                // SOLO inicia la carga circular de Gaze si el objeto ES interactuable
+                if (hit.transform.CompareTag(interactableTag))
+                {
+                    GazeManager.Instance.StartGazeSelection();
+                }
+                else
+                {
+                    // Si miras una pared u objeto normal, cancela cualquier carga previa
+                    GazeManager.Instance.CancelGazeSelection();
+                }
             }
 
-            if (hit.transform.CompareTag(interactableTag))
-            {
-                PointerOnGaze(hit.point);
-            }
-            else
-            {
-                PointerOutGaze();
-            }
+            // SIEMPRE proyecta la posición del puntero en la superficie que toca el Raycast (pared, piso, etc.)
+            PointerOnGaze(hit.point);
         }
         else
         {
-            
             _gazedAtObject?.SendMessage("OnPointerExitXR", null, SendMessageOptions.DontRequireReceiver);
             _gazedAtObject = null;
+            PointerOutGaze();
         }
 
-        
         if (Google.XR.Cardboard.Api.IsTriggerPressed)
         {
             _gazedAtObject?.SendMessage("OnPointerClickXR", null, SendMessageOptions.DontRequireReceiver);
         }
+    }
 
-          }
-
-        private void PointerOnGaze(Vector3 hitPoint)
+    private void PointerOnGaze(Vector3 hitPoint)
 
         {
             float scaleFactor = scaleSize * Vector3.Distance(transform.position, hitPoint);

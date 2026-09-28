@@ -72,6 +72,17 @@ public class GrabObject : MonoBehaviour
 
     public void OnPointerClickXR()
     {
+        // Verifica si la misión ya fue aceptada antes de permitir agarrar
+        if (GameProgress.Instance != null && !GameProgress.Instance.missionAccepted)
+        {
+            // Si no se ha aceptado la misión, muestra un diálogo indicándolo (si tienes DialogueUI)
+            if (DialogueUI.Instance != null)
+            {
+                DialogueUI.Instance.ShowLine("Primero debes hablar con Timy y aceptar la misión.");
+            }
+            return; // Cancela la acción de agarrar
+        }
+
         Grab();
     }
 }
